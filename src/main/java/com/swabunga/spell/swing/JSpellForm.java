@@ -1,76 +1,92 @@
 /*
-Jazzy - a Java library for Spell Checking
-Copyright (C) 2001 Mindaugas Idzelis
-Full text of license can be found in LICENSE.txt
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Jazzy - a Java library for Spell Checking Copyright (C) 2001 Mindaugas Idzelis Full text of license can be found in
+ * LICENSE.txt
+ * 
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 /*
- * put your module comment here
- * formatted with JxBeauty (c) johann.langhofer@nextra.at
+ * put your module comment here formatted with JxBeauty (c) johann.langhofer@nextra.at
  */
 
 /*
  * Changes 11 Jan 2003 Anthony Roy:
- *
- * 1) Changed checkText from a JTextArea to a JTextField (lines 51 and 115)
- * 2) Altered the ADD_CMD action (Line 196). Now adds the misspelled word to the dictionary unless
- *    a new word is typed which does not match the current suggestion. A confirm dialog is shown.
+ * 
+ * 1) Changed checkText from a JTextArea to a JTextField (lines 51 and 115) 2) Altered the ADD_CMD action (Line 196).
+ * Now adds the misspelled word to the dictionary unless a new word is typed which does not match the current
+ * suggestion. A confirm dialog is shown.
  */
 package com.swabunga.spell.swing;
 
-import com.swabunga.spell.engine.Word;
-import com.swabunga.spell.event.SpellCheckEvent;
-
-import javax.swing.*;
-import javax.swing.event.EventListenerList;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.EventListenerList;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
-/** Implementation of a spell check form.
- *  <p>This needs to layed out correctly but for the most part it works.</p>
- *
+import com.swabunga.spell.engine.Word;
+import com.swabunga.spell.event.SpellCheckEvent;
+
+/**
+ * Implementation of a spell check form.
+ * <p>
+ * This needs to layed out correctly but for the most part it works.
+ * </p>
+ * 
  * @author Jason Height (jheight@chariot.net.au)
  */
 public class JSpellForm extends JPanel implements ActionListener, ListSelectionListener {
-  /** The Ignore button click action command*/
+  /** The Ignore button click action command */
   public static final String IGNORE_CMD = "IGNORE";
-  /** The Ignore All button click action command*/
+  /** The Ignore All button click action command */
   public static final String IGNOREALL_CMD = "IGNOREALL";
-  /** The Add button click action command*/
+  /** The Add button click action command */
   public static final String ADD_CMD = "ADD";
-  /** The Replace button click action command*/
+  /** The Replace button click action command */
   public static final String REPLACE_CMD = "REPLACE";
-  /** The Replace All button click action command*/
+  /** The Replace All button click action command */
   public static final String REPLACEALL_CMD = "REPLACEALL";
-  /** The Cancel button click action command*/
+  /** The Cancel button click action command */
   public static final String CANCEL_CMD = "CANCEL";
-  /** The resource for the Suggestions label*/
+  /** The resource for the Suggestions label */
   private static final String SUGGESTIONS_RES = "SUGGESTIONS";
   private static final String INVALIDWORD_RES = "INVALIDWORD";
-  /** Add word confirm*/
+  /** Add word confirm */
   public static final String ADDWORD_1 = "ADDWORD_1";
   public static final String ADDWORD_2 = "ADDWORD_2";
   public static final String ADDWORD_3 = "ADDWORD_3";
-  
+
+  /**
+   * This flag contains true if the operating system is Mac OS X (according to the <tt>os.name</tt> system property),
+   * false if not.
+   */
+  static final boolean osxFlag = System.getProperty("os.name").toLowerCase().startsWith("mac os x");
+
   private JLabel wrongWordLabel;
 
   /* Accessible GUI Components */
@@ -88,7 +104,7 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     initialiseGUI();
   }
 
-  /** Helper method to create a JButton with a command, a text label and a listener*/
+  /** Helper method to create a JButton with a command, a text label and a listener */
   private static final JButton createButton(String command, String text, ActionListener listener) {
     JButton btn = new JButton(text);
     btn.setActionCommand(command);
@@ -96,7 +112,7 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     return btn;
   }
 
-  /** Creates the buttons on the left hand side of the panel*/
+  /** Creates the buttons on the left hand side of the panel */
   protected JPanel makeEastPanel() {
     JPanel jPanel1 = new JPanel();
     BoxLayout layout = new BoxLayout(jPanel1, BoxLayout.Y_AXIS);
@@ -135,7 +151,7 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     JPanel jPanel3 = new JPanel();
     JLabel lbl1 = new JLabel(messages.getString(INVALIDWORD_RES));
     wrongWordLabel = new JLabel("");
-    wrongWordLabel.setForeground(Color.red); //Changed Color.RED to Color.red for 1.3 compatibility.
+    wrongWordLabel.setForeground(Color.red); // Changed Color.RED to Color.red for 1.3 compatibility.
     jPanel3.add(lbl1);
     jPanel3.add(wrongWordLabel);
     jPanel2.add(jPanel3);
@@ -150,7 +166,7 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     return jPanel2;
   }
 
-  /** Called by the constructor to initialise the GUI*/
+  /** Called by the constructor to initialise the GUI */
   protected void initialiseGUI() {
     setLayout(new BorderLayout());
     this.add(makeEastPanel(), BorderLayout.EAST);
@@ -162,7 +178,7 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     listenerList.add(ActionListener.class, l);
   }
 
-  /** Deregister an action listener*/
+  /** Deregister an action listener */
   public void removeActionListener(ActionListener l) {
     listenerList.remove(ActionListener.class, l);
   }
@@ -179,7 +195,7 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     }
   }
 
-  /** Sets the current spell check event that is being shown to the user*/
+  /** Sets the current spell check event that is being shown to the user */
   public void setSpellEvent(SpellCheckEvent event) {
     spellEvent = event;
     DefaultListModel m = new DefaultListModel();
@@ -197,7 +213,7 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     }
   }
 
-  /** Fired when a value in the list is selected*/
+  /** Fired when a value in the list is selected */
   public void valueChanged(ListSelectionEvent e) {
     if (!e.getValueIsAdjusting()) {
       Object selectedValue = suggestList.getSelectedValue();
@@ -222,8 +238,9 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
       String selected = (selObj == null ? "" : selObj.toString());
       String addString = (inField.equals(selected) ? spellEvent.getInvalidWord() : inField);
 
-      int n = JOptionPane.showConfirmDialog(this, messages.getString(ADDWORD_1) + " '" + addString + "' " +
-	  	messages.getString(ADDWORD_2), messages.getString(ADDWORD_3), JOptionPane.YES_NO_OPTION);
+      pauseMaybe();
+      int n = JOptionPane.showConfirmDialog(this, messages.getString(ADDWORD_1) + " '" + addString + "' " + messages.getString(ADDWORD_2), messages.getString(ADDWORD_3), JOptionPane.YES_NO_OPTION);
+      pauseMaybe();
 
       if (n == JOptionPane.YES_OPTION) {
         spellEvent.addToDictionary(addString);
@@ -234,6 +251,19 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
       spellEvent.cancel();
     }
     fireActionEvent(e);
+  }
+
+  /**
+   * Insert a pause here on OS X, because a bug in the Swing implementation sometimes screws up the menu bar when you
+   * show or hide dialogs in quick succession.
+   */
+  static void pauseMaybe() {
+    if (osxFlag) {
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException exc) {
+      }
+    }
   }
 
   public static void main(String[] args) {
@@ -249,6 +279,3 @@ public class JSpellForm extends JPanel implements ActionListener, ListSelectionL
     }
   }
 }
-
-
-

@@ -1,59 +1,51 @@
 /*
-Jazzy - a Java library for Spell Checking
-Copyright (C) 2001 Mindaugas Idzelis
-Full text of license can be found in LICENSE.txt
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Jazzy - a Java library for Spell Checking Copyright (C) 2001 Mindaugas Idzelis Full text of license can be found in
+ * LICENSE.txt
+ * 
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 package com.swabunga.spell.engine;
 
-
 /**
- * A phonetic encoding algorithm that takes an English word and computes a phonetic version of it. This
- * allows for phonetic matches in a spell checker. This class is a port of the C++ DoubleMetaphone() class,
- * which was intended to return two possible phonetic translations for certain words, although the Java version
- * only seems to be concerned with one, making the "double" part erroneous.
- * <br>
- * source code for the original C++ can be found
- * here: <a href="http://aspell.sourceforge.net/metaphone/"/>http://aspell.sourceforge.net/metaphone/</a>
- * DoubleMetaphone does some processing, such as uppercasing, on the input string first to normalize it. Then, to
- * create the key, the function traverses the input string in a while loop, sending successive characters into a giant
- * switch statement. Before determining the appropriate pronunciation, the algorithm considers the context
- * surrounding each character within the input string.
+ * A phonetic encoding algorithm that takes an English word and computes a phonetic version of it. This allows for
+ * phonetic matches in a spell checker. This class is a port of the C++ DoubleMetaphone() class, which was intended to
+ * return two possible phonetic translations for certain words, although the Java version only seems to be concerned
+ * with one, making the "double" part erroneous. <br>
+ * source code for the original C++ can be found here: <a
+ * href="http://aspell.sourceforge.net/metaphone/"/>http://aspell.sourceforge.net/metaphone/</a> DoubleMetaphone does
+ * some processing, such as uppercasing, on the input string first to normalize it. Then, to create the key, the
+ * function traverses the input string in a while loop, sending successive characters into a giant switch statement.
+ * Before determining the appropriate pronunciation, the algorithm considers the context surrounding each character
+ * within the input string.
  * <p>
- * Things that were changed:
- *   <br/>The alternate flag could be set to true but was never checked so why bother with it. REMOVED
- *   <br/>Why was this class serializable?
- *   <br/>The primary, in, length and last variables could be initialized and local to the
- *   process method and references passed around the appropriate methods. As such there are
- *   no class variables and this class becomes firstly threadsafe and secondly could be static final.
- *   <br/>The function call SlavoGermaic was called repeatedly in the process function, it is now only called once.
- *
+ * Things that were changed: <br/>
+ * The alternate flag could be set to true but was never checked so why bother with it. REMOVED <br/>
+ * Why was this class serializable? <br/>
+ * The primary, in, length and last variables could be initialized and local to the process method and references passed
+ * around the appropriate methods. As such there are no class variables and this class becomes firstly threadsafe and
+ * secondly could be static final. <br/>
+ * The function call SlavoGermaic was called repeatedly in the process function, it is now only called once.
+ * 
  */
 public class DoubleMeta implements Transformator {
 
   /**
-   * The replace list is used in the getSuggestions method.
-   * All of the letters in the misspelled word are replaced with the characters from
-   * this list to try and generate more suggestions, which implies l*n tries,
-   * if l is the size of the string, and n is the size of this list.
-   *
+   * The replace list is used in the getSuggestions method. All of the letters in the misspelled word are replaced with
+   * the characters from this list to try and generate more suggestions, which implies l*n tries, if l is the size of
+   * the string, and n is the size of this list.
+   * 
    * In addition to that, each of these letters is added to the misspelled word.
    */
   private static char[] replaceList = {'A', 'B', 'X', 'S', 'K', 'J', 'T', 'F', 'H', 'L', 'M', 'N', 'P', 'R', '0'};
-
 
   private static final String[] myList = {"GN", "KN", "PN", "WR", "PS", ""};
   private static final String[] list1 = {"ACH", ""};
@@ -81,10 +73,10 @@ public class DoubleMeta implements Transformator {
   private static final String[] list23 = {"UCCEE", "UCCES", ""};
   private static final String[] list24 = {"CK", "CG", "CQ", ""};
   private static final String[] list25 = {"CI", "CE", "CY", ""};
-// DMV: used by the orininal code which returned two phonetic code, but not the current code
-//    private static final String[] list26 = {
-//        "CIO", "CIE", "CIA", ""
-//    };
+  // DMV: used by the orininal code which returned two phonetic code, but not the current code
+  // private static final String[] list26 = {
+  // "CIO", "CIE", "CIA", ""
+  // };
   private static final String[] list27 = {" C", " Q", " G", ""};
   private static final String[] list28 = {"C", "K", "Q", ""};
   private static final String[] list29 = {"CE", "CI", ""};
@@ -108,10 +100,10 @@ public class DoubleMeta implements Transformator {
   private static final String[] list47 = {"SCH", ""};
   private static final String[] list48 = {"ET", ""};
 
-//  DMV: used by the orininal code which returned two phonetic code, but not the current code
-//    private static final String[] list49 = {
-//        "IER ", ""
-//    };
+  // DMV: used by the orininal code which returned two phonetic code, but not the current code
+  // private static final String[] list49 = {
+  // "IER ", ""
+  // };
   private static final String[] list50 = {"JOSE", ""};
   private static final String[] list51 = {"SAN ", ""};
   private static final String[] list52 = {"SAN ", ""};
@@ -159,14 +151,13 @@ public class DoubleMeta implements Transformator {
   private static final String[] list94 = {"AU", "OU", ""};
   private static final String[] list95 = {"C", "X", ""};
 
-//  DMV: used by the orininal code which returned two phonetic code, but not the current code
-//    private static final String[] list96 = {
-//        "ZO", "ZI", "ZA", ""
-//    };
+  // DMV: used by the orininal code which returned two phonetic code, but not the current code
+  // private static final String[] list96 = {
+  // "ZO", "ZI", "ZA", ""
+  // };
 
   /**
    * put your documentation comment here
-   * @return
    */
   private final static boolean SlavoGermanic(String in) {
     if ((in.indexOf("W") > -1) || (in.indexOf("K") > -1) || (in.indexOf("CZ") > -1) || (in.indexOf("WITZ") > -1))
@@ -176,6 +167,7 @@ public class DoubleMeta implements Transformator {
 
   /**
    * put your documentation comment here
+   * 
    * @param main
    */
   private final static void MetaphAdd(StringBuffer primary, String main) {
@@ -190,8 +182,6 @@ public class DoubleMeta implements Transformator {
 
   /**
    * put your documentation comment here
-   * @param at
-   * @return
    */
   private final static boolean isVowel(String in, int at, int length) {
     if ((at < 0) || (at >= length))
@@ -204,11 +194,6 @@ public class DoubleMeta implements Transformator {
 
   /**
    * put your documentation comment here
-   * @param string
-   * @param start
-   * @param length
-   * @param list
-   * @return
    */
   private final static boolean stringAt(String string, int start, int length, String[] list) {
     if ((start < 0) || (start >= string.length()) || list.length == 0)
@@ -222,10 +207,10 @@ public class DoubleMeta implements Transformator {
   }
 
   /**
-   * Take the given word, and return the best phonetic hash for it.
-   * Vowels are minimized as much as possible, and consenants
-   * that have similiar sounds are converted to the same consenant
-   * for example, 'v' and 'f' are both converted to 'f'
+   * Take the given word, and return the best phonetic hash for it. Vowels are minimized as much as possible, and
+   * consenants that have similiar sounds are converted to the same consenant for example, 'v' and 'f' are both
+   * converted to 'f'
+   * 
    * @param word the texte to transform
    * @return the result of the phonetic transformation
    */
@@ -547,7 +532,7 @@ public class DoubleMeta implements Transformator {
           break;
         case 'R':
           if ((current == last) && !isSlavoGermaic && stringAt(in, current - 2, 2, list63) && !stringAt(in, current - 4, 2, list64)) {
-//            MetaphAdd(primary, "");
+            // MetaphAdd(primary, "");
           } else
             MetaphAdd(primary, 'R');
           if (in.charAt(current + 1) == 'R')
@@ -611,7 +596,7 @@ public class DoubleMeta implements Transformator {
             break;
           }
           if ((current == last) && stringAt(in, current - 2, 2, list78)) {
-            //MetaphAdd(primary, "");
+            // MetaphAdd(primary, "");
           } else
             MetaphAdd(primary, 'S');
           if (stringAt(in, current + 1, 1, list79))
@@ -708,6 +693,3 @@ public class DoubleMeta implements Transformator {
     return replaceList;
   }
 }
-
-
-

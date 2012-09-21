@@ -1,47 +1,53 @@
 /*
-Jazzy - a Java library for Spell Checking
-Copyright (C) 2001 Mindaugas Idzelis
-Full text of license can be found in LICENSE.txt
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Jazzy - a Java library for Spell Checking Copyright (C) 2001 Mindaugas Idzelis Full text of license can be found in
+ * LICENSE.txt
+ * 
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 package com.swabunga.spell.swing;
 
-import com.swabunga.spell.engine.SpellDictionary;
-import com.swabunga.spell.engine.SpellDictionaryHashMap;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.zip.ZipInputStream;
 
+import javax.swing.JApplet;
+import javax.swing.JButton;
+import javax.swing.JTextArea;
+
+import com.swabunga.spell.engine.SpellDictionary;
+import com.swabunga.spell.engine.SpellDictionaryHashMap;
+
 /**
  * @author aim4min
- *
- * To change this generated comment edit the template variable "typecomment":
- * Window>Preferences>Java>Templates.
- * To enable and disable the creation of type comments go to
- * Window>Preferences>Java>Code Generation.
+ * 
+ *         To change this generated comment edit the template variable "typecomment": Window>Preferences>Java>Templates.
+ *         To enable and disable the creation of type comments go to Window>Preferences>Java>Code Generation.
  */
 public class JSpellApplet extends JApplet {
 
-  private static final String dictionaryFile = "dict/english.0.zip";
+  private static final String dictionaryFile = "dictionaries/en_US.zip";
   private SpellDictionary dictionary;
   JTextArea text = null;
   JButton spell = null;
@@ -66,8 +72,8 @@ public class JSpellApplet extends JApplet {
       try {
         resource = new URL(getCodeBase().toExternalForm() + dictionaryFile);
         zip = new ZipInputStream(resource.openStream());
-        /* getCodeBase() throws a NullPointerException when run
-         * outside the context of a browser
+        /*
+         * getCodeBase() throws a NullPointerException when run outside the context of a browser
          */
       } catch (NullPointerException e) {
         FileInputStream fin = new FileInputStream(dictionaryFile);

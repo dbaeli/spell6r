@@ -1,38 +1,49 @@
 /*
-Jazzy - a Java library for Spell Checking
-Copyright (C) 2001 Mindaugas Idzelis
-Full text of license can be found in LICENSE.txt
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Jazzy - a Java library for Spell Checking Copyright (C) 2001 Mindaugas Idzelis Full text of license can be found in
+ * LICENSE.txt
+ * 
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 /* Created by bgalbs on Jan 30, 2003 at 11:38:39 PM */
 package com.swabunga.spell.engine;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 /**
- * An implementation of <code>SpellDictionary</code> that doesn't cache any words in memory. Avoids the huge
- * footprint of <code>SpellDictionaryHashMap</code> at the cost of relatively minor latency. A future version
- * of this class that implements some caching strategies might be a good idea in the future, if there's any
- * demand for it.
+ * An implementation of <code>SpellDictionary</code> that doesn't cache any words in memory. Avoids the huge footprint
+ * of <code>SpellDictionaryHashMap</code> at the cost of relatively minor latency. A future version of this class that
+ * implements some caching strategies might be a good idea in the future, if there's any demand for it.
  * <p>
- * This class makes use of the "classic" Java IO library (java.io). However, it could probably benefit from
- * the new IO APIs (java.nio) and it is anticipated that a future version of this class, probably called
+ * This class makes use of the "classic" Java IO library (java.io). However, it could probably benefit from the new IO
+ * APIs (java.nio) and it is anticipated that a future version of this class, probably called
  * <code>SpellDictionaryDiskNIO</code> will appear at some point.
- *
+ * 
  * @author Ben Galbraith (ben@galbraiths.org)
  * @version 0.1
  * @since 0.5
@@ -52,8 +63,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   private File db;
   private Map index;
   /**
-   * The flag indicating if the initial preparation or loading of the on 
-   * disk dictionary is complete.
+   * The flag indicating if the initial preparation or loading of the on disk dictionary is complete.
    */
   protected boolean ready;
 
@@ -61,44 +71,33 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   private List indexCodeCache = null;
 
   /**
-   * Construct a spell dictionary on disk. 
-   * The spell dictionary is created from words list(s) contained in file(s).
-   * A words list file is a file with one word per line. Words list files are
-   * located in a <code>base/words</code> dictionary where <code>base</code> 
-   * is the path to <code>words</code> dictionary. The on disk spell 
-   * dictionary is created in <code>base/db</code> dictionary and contains 
-   * files:
+   * Construct a spell dictionary on disk. The spell dictionary is created from words list(s) contained in file(s). A
+   * words list file is a file with one word per line. Words list files are located in a <code>base/words</code>
+   * dictionary where <code>base</code> is the path to <code>words</code> dictionary. The on disk spell dictionary is
+   * created in <code>base/db</code> dictionary and contains files:
    * <ul>
    * <li><code>contents</code> list the words files used for spelling.</li>
-   * <li><code>words.db</code> the content of words files organized as
-   * a <em>database</em> of words.</li>
-   * <li><code>words.idx</code> an index file to the <code>words.db</code>
-   * file content.</li>
+   * <li><code>words.db</code> the content of words files organized as a <em>database</em> of words.</li>
+   * <li><code>words.idx</code> an index file to the <code>words.db</code> file content.</li>
    * </ul>
-   * The <code>contents</code> file has a list of 
-   * <code>filename, size</code> indicating the name and length of each files
-   * in the <code>base/words</code> dictionary. If one of theses files was 
-   * changed, added or deleted before the call to the constructor, the process 
-   * of producing new or updated <code>words.db</code> and 
-   * <code>words.idx</code> files is started again.
+   * The <code>contents</code> file has a list of <code>filename, size</code> indicating the name and length of each
+   * files in the <code>base/words</code> dictionary. If one of theses files was changed, added or deleted before the
+   * call to the constructor, the process of producing new or updated <code>words.db</code> and <code>words.idx</code>
+   * files is started again.
    * <p/>
-   * The spellchecking process is then worked upon the <code>words.db</code>
-   * and <code>words.idx</code> files.
+   * The spellchecking process is then worked upon the <code>words.db</code> and <code>words.idx</code> files.
    * <p/>
    * 
-   * NOTE: Do *not* create two instances of this class pointing to the same <code>base</code> unless
-   * you are sure that a new dictionary does not have to be created. In the future, some sort of
-   * external locking mechanism may be created that handles this scenario gracefully.
+   * NOTE: Do *not* create two instances of this class pointing to the same <code>base</code> unless you are sure that a
+   * new dictionary does not have to be created. In the future, some sort of external locking mechanism may be created
+   * that handles this scenario gracefully.
    * 
-   * @param base the base directory in which <code>SpellDictionaryDisk</code> can expect to find
-   * its necessary files.
+   * @param base the base directory in which <code>SpellDictionaryDisk</code> can expect to find its necessary files.
    * @param phonetic the phonetic file used by the spellchecker.
-   * @param block if a new word db needs to be created, there can be a considerable delay before
-   * the constructor returns. If block is true, this method will block while the db is created
-   * and return when done. If block is false, this method will create a thread to create the new
-   * dictionary and return immediately.
-   * @throws java.io.FileNotFoundException indicates problems locating the
-   * files on the system
+   * @param block if a new word db needs to be created, there can be a considerable delay before the constructor
+   *          returns. If block is true, this method will block while the db is created and return when done. If block
+   *          is false, this method will create a thread to create the new dictionary and return immediately.
+   * @throws java.io.FileNotFoundException indicates problems locating the files on the system
    * @throws java.io.IOException indicates problems reading the files
    */
   public SpellDictionaryDisk(File base, File phonetic, boolean block) throws FileNotFoundException, IOException {
@@ -109,9 +108,12 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
     this.words = new File(base, DIRECTORY_WORDS);
     this.db = new File(base, DIRECTORY_DB);
 
-    if (!this.base.exists()) throw new FileNotFoundException("Couldn't find required path '" + this.base + "'");
-    if (!this.words.exists()) throw new FileNotFoundException("Couldn't find required path '" + this.words + "'");
-    if (!this.db.exists()) db.mkdirs();
+    if (!this.base.exists())
+      throw new FileNotFoundException("Couldn't find required path '" + this.base + "'");
+    if (!this.words.exists())
+      throw new FileNotFoundException("Couldn't find required path '" + this.words + "'");
+    if (!this.db.exists())
+      db.mkdirs();
 
     if (newDictionaryFiles()) {
       if (block) {
@@ -139,8 +141,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   }
 
   /**
-   * Builds the file words database file and the contents file for the on
-   * disk dictionary.
+   * Builds the file words database file and the contents file for the on disk dictionary.
    */
   protected void buildNewDictionaryDatabase() throws FileNotFoundException, IOException {
     /* combine all dictionary files into one sorted file */
@@ -157,6 +158,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   /**
    * Adds another word to the dictionary. <em>This method is  not yet implemented
    * for this class</em>.
+   * 
    * @param word The word to add.
    */
   public void addWord(String word) {
@@ -165,6 +167,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
 
   /**
    * Returns a list of words that have the same phonetic code.
+   * 
    * @param code The phonetic code common to the list of words
    * @return A list of words having the same phonetic code
    */
@@ -180,11 +183,12 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
         input.read(bytes, 0, posLen[1]);
         input.close();
 
-        String data = new String(bytes);
+        String data = new String(bytes, "utf-8");
         String[] lines = split(data, "\n");
         for (int i = 0; i < lines.length; i++) {
           String[] s = split(lines[i], ",");
-          if (s[0].equals(code)) words.addElement(s[1]);
+          if (s[0].equals(code))
+            words.addElement(s[1]);
         }
       } catch (Exception e) {
         e.printStackTrace();
@@ -195,8 +199,8 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   }
 
   /**
-   * Indicates if the initial preparation or loading of the on disk dictionary
-   * is complete.
+   * Indicates if the initial preparation or loading of the on disk dictionary is complete.
+   * 
    * @return the indication that the dictionary initial setup is done.
    */
   public boolean isReady() {
@@ -210,7 +214,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
     if (c.exists()) {
       BufferedReader reader = null;
       try {
-        reader = new BufferedReader(new FileReader(c));
+        reader = new BufferedReader(new InputStreamReader(new FileInputStream(c), "utf-8"));
         String line;
         while ((line = reader.readLine()) != null) {
           // format of file should be [filename],[size]
@@ -222,7 +226,8 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
       } catch (IOException e) {
         throw e;
       } finally {
-        if (reader != null) reader.close();
+        if (reader != null)
+          reader.close();
       }
     }
 
@@ -251,12 +256,12 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
     List w = new ArrayList();
 
     /*
-     * read every single word into the list. eeek. if this causes problems,
-     * we may wish to explore disk-based sorting or more efficient memory-based storage
+     * read every single word into the list. eeek. if this causes problems, we may wish to explore disk-based sorting or
+     * more efficient memory-based storage
      */
     File[] wordFiles = words.listFiles();
     for (int i = 0; i < wordFiles.length; i++) {
-      BufferedReader r = new BufferedReader(new FileReader(wordFiles[i]));
+      BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(wordFiles[i]), "utf-8"));
       String word;
       while ((word = r.readLine()) != null) {
         if (!word.equals("")) {
@@ -270,7 +275,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
 
     // FIXME - error handling for running out of disk space would be nice.
     File file = File.createTempFile("jazzy", "sorted");
-    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
     String prev = null;
     for (int i = 0; i < w.size(); i++) {
       String word = (String) w.get(i);
@@ -288,7 +293,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   private void buildCodeDb(File sortedWords) throws FileNotFoundException, IOException {
     List codeList = new ArrayList();
 
-    BufferedReader reader = new BufferedReader(new FileReader(sortedWords));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sortedWords), "utf-8"));
     String word;
     while ((word = reader.readLine()) != null) {
       codeList.add(new CodeWord(this.getCode(word), word));
@@ -306,14 +311,15 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
     for (int i = 0; i < codeList.size(); i++) {
       CodeWord cw = (CodeWord) codeList.get(i);
       String thisCode = cw.getCode();
-//            if (thisCode.length() > 3) thisCode = thisCode.substring(0, 3);
+      // if (thisCode.length() > 3) thisCode = thisCode.substring(0, 3);
       thisCode = getIndexCode(thisCode, codeList);
       String toWrite = cw.getCode() + "," + cw.getWord() + "\n";
-      byte[] bytes = toWrite.getBytes();
+      byte[] bytes = toWrite.getBytes("utf-8");
 
-      if (currentCode == null) currentCode = thisCode;
+      if (currentCode == null)
+        currentCode = thisCode;
       if (!currentCode.equals(thisCode)) {
-        index.add(new Object[]{currentCode, new int[]{currentPosition, currentLength}});
+        index.add(new Object[] {currentCode, new int[] {currentPosition, currentLength}});
         currentPosition += currentLength;
         currentLength = bytes.length;
         currentCode = thisCode;
@@ -326,9 +332,9 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
 
     // Output the last iteration
     if (currentCode != null && currentPosition != 0 && currentLength != 0)
-      index.add(new Object[]{currentCode, new int[]{currentPosition, currentLength}});
+      index.add(new Object[] {currentCode, new int[] {currentPosition, currentLength}});
 
-    BufferedWriter writer = new BufferedWriter(new FileWriter(new File(db, FILE_INDEX)));
+    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(db, FILE_INDEX)), "utf-8"));
     for (int i = 0; i < index.size(); i++) {
       Object[] o = (Object[]) index.get(i);
       writer.write(o[0].toString());
@@ -344,7 +350,7 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   private void buildContentsFile() throws IOException {
     File[] wordFiles = words.listFiles();
     if (wordFiles.length > 0) {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(new File(db, FILE_CONTENTS)));
+      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(db, FILE_CONTENTS)), "utf-8"));
       for (int i = 0; i < wordFiles.length; i++) {
         writer.write(wordFiles[i].getName());
         writer.write(",");
@@ -358,17 +364,23 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   }
 
   /**
-   * Loads the index file from disk. The index file accelerates words lookup
-   * into the dictionary db file.
+   * Loads the index file from disk. The index file accelerates words lookup into the dictionary db file.
    */
   protected void loadIndex() throws IOException {
     index = new HashMap();
     File idx = new File(db, FILE_INDEX);
-    BufferedReader reader = new BufferedReader(new FileReader(idx));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(idx), "utf-8"));
     String line;
     while ((line = reader.readLine()) != null) {
       String[] fields = split(line, ",");
-      index.put(fields[0], new int[]{Integer.parseInt(fields[1]), Integer.parseInt(fields[2])});
+      switch (fields.length) {
+        case 2:
+          index.put("", new int[] {Integer.parseInt(fields[0]), Integer.parseInt(fields[1])});
+          break;
+        case 3:
+          index.put(fields[0], new int[] {Integer.parseInt(fields[1]), Integer.parseInt(fields[2])});
+          break;
+      }
     }
     reader.close();
   }
@@ -386,13 +398,16 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
   }
 
   private String getIndexCode(String code, List codes) {
-    if (indexCodeCache == null) indexCodeCache = new ArrayList();
+    if (indexCodeCache == null)
+      indexCodeCache = new ArrayList();
 
-    if (code.length() <= 1) return code;
+    if (code.length() <= 1)
+      return code;
 
     for (int i = 0; i < indexCodeCache.size(); i++) {
       String c = (String) indexCodeCache.get(i);
-      if (code.startsWith(c)) return c;
+      if (code.startsWith(c))
+        return c;
     }
 
     int foundSize = -1;
@@ -403,14 +418,17 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
       for (int i = 0; i < codes.size();) {
         if (i == 0) {
           i = Collections.binarySearch(codes, new CodeWord(thisCode, ""));
-          if (i < 0) i = 0;
+          if (i < 0)
+            i = 0;
         }
 
         CodeWord cw = (CodeWord) codes.get(i);
         if (cw.getCode().startsWith(thisCode)) {
           count++;
-          if (count > INDEX_SIZE_MAX) break;
-        } else if (cw.getCode().compareTo(thisCode) > 0) break;
+          if (count > INDEX_SIZE_MAX)
+            break;
+        } else if (cw.getCode().compareTo(thisCode) > 0)
+          break;
         i++;
       }
       if (count <= INDEX_SIZE_MAX) {
@@ -421,7 +439,8 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
     }
 
     String newCode = (foundSize == -1) ? code : code.substring(0, foundSize);
-    if (cacheable) indexCodeCache.add(newCode);
+    if (cacheable)
+      indexCodeCache.add(newCode);
     return newCode;
   }
 
@@ -455,12 +474,15 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
     }
 
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof CodeWord)) return false;
+      if (this == o)
+        return true;
+      if (!(o instanceof CodeWord))
+        return false;
 
       final CodeWord codeWord = (CodeWord) o;
 
-      if (!word.equals(codeWord.word)) return false;
+      if (!word.equals(codeWord.word))
+        return false;
 
       return true;
     }
@@ -492,13 +514,17 @@ public class SpellDictionaryDisk extends SpellDictionaryASpell {
     }
 
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof FileSize)) return false;
+      if (this == o)
+        return true;
+      if (!(o instanceof FileSize))
+        return false;
 
       final FileSize fileSize = (FileSize) o;
 
-      if (size != fileSize.size) return false;
-      if (!filename.equals(fileSize.filename)) return false;
+      if (size != fileSize.size)
+        return false;
+      if (!filename.equals(fileSize.filename))
+        return false;
 
       return true;
     }

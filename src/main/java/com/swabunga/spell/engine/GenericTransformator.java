@@ -1,100 +1,89 @@
 /*
-Jazzy - a Java library for Spell Checking
-Copyright (C) 2001 Mindaugas Idzelis
-Full text of license can be found in LICENSE.txt
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Jazzy - a Java library for Spell Checking Copyright (C) 2001 Mindaugas Idzelis Full text of license can be found in
+ * LICENSE.txt
+ * 
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 package com.swabunga.spell.engine;
 
-import com.swabunga.util.StringUtility;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Vector;
 
+import com.swabunga.spell.util.StringUtility;
+
 /**
- * A Generic implementation of a transformator takes an 
- * <a href="http://aspell.net/man-html/Phonetic-Code.html">
- * aspell phonetics file</a> and constructs some sort of transformation 
- * table using the inner class TransformationRule.
- * </p>
- * Basically, each transformation rule represent a line in the phonetic file.
- * One line contains two groups of characters separated by white space(s).
- * The first group is the <em>match expression</em>. 
- * The <em>match expression</em> describe letters to associate with a syllable.
- * The second group is the <em>replacement expression</em> giving the phonetic 
+ * A Generic implementation of a transformator takes an <a href="http://aspell.net/man-html/Phonetic-Code.html"> aspell
+ * phonetics file</a> and constructs some sort of transformation table using the inner class TransformationRule. </p>
+ * Basically, each transformation rule represent a line in the phonetic file. One line contains two groups of characters
+ * separated by white space(s). The first group is the <em>match expression</em>. The <em>match expression</em> describe
+ * letters to associate with a syllable. The second group is the <em>replacement expression</em> giving the phonetic
  * equivalent of the <em>match expression</em>.
- *
- * @see SpellDictionaryASpell SpellDictionaryASpell for information on getting
- * phonetic files for aspell.
- *
+ * 
+ * @see SpellDictionaryASpell SpellDictionaryASpell for information on getting phonetic files for aspell.
+ * 
  * @author Robert Gustavsson (robert@lindesign.se)
  */
 public class GenericTransformator implements Transformator {
 
-
   /**
-   * This replace list is used if no phonetic file is supplied or it doesn't
-   * contain the alphabet.
+   * This replace list is used if no phonetic file is supplied or it doesn't contain the alphabet.
    */
   private static final char[] defaultEnglishAlphabet = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
 
   /**
    * The alphabet start marker.
+   * 
    * @see GenericTransformator#KEYWORD_ALPHBET KEYWORD_ALPHBET
    */
   public static final char ALPHABET_START = '[';
   /**
    * The alphabet end marker.
+   * 
    * @see GenericTransformator#KEYWORD_ALPHBET KEYWORD_ALPHBET
    */
   public static final char ALPHABET_END = ']';
   /**
-   * Phonetic file keyword indicating that a different alphabet is used 
-   * for this language. The keyword must be followed an
-   * {@link GenericTransformator#ALPHABET_START ALPHABET_START} marker, 
-   * a list of characters defining the alphabet and a
-   * {@link GenericTransformator#ALPHABET_END ALPHABET_END} marker.
+   * Phonetic file keyword indicating that a different alphabet is used for this language. The keyword must be followed
+   * an {@link GenericTransformator#ALPHABET_START ALPHABET_START} marker, a list of characters defining the alphabet
+   * and a {@link GenericTransformator#ALPHABET_END ALPHABET_END} marker.
    */
   public static final String KEYWORD_ALPHBET = "alphabet";
   /**
-   * Phonetic file lines starting with the keywords are skipped. 
-   * The key words are: version, followup, collapse_result.
+   * Phonetic file lines starting with the keywords are skipped. The key words are: version, followup, collapse_result.
    * Comments, starting with '#', are also skipped to the end of line.
    */
   public static final String[] IGNORED_KEYWORDS = {"version", "followup", "collapse_result"};
 
   /**
-   * Start a group of characters which can be appended to the match expression
-   * of the phonetic file.
+   * Start a group of characters which can be appended to the match expression of the phonetic file.
    */
   public static final char STARTMULTI = '(';
   /**
-   * End a group of characters which can be appended to the match expression
-   * of the phonetic file.
+   * End a group of characters which can be appended to the match expression of the phonetic file.
    */
   public static final char ENDMULTI = ')';
   /**
-   * During phonetic transformation of a word each numeric character is
-   * replaced by this DIGITCODE.
+   * During phonetic transformation of a word each numeric character is replaced by this DIGITCODE.
    */
   public static final String DIGITCODE = "0";
   /**
-   * Phonetic file character code indicating that the replace expression
-   * is empty.
+   * Phonetic file character code indicating that the replace expression is empty.
    */
   public static final String REPLACEVOID = "_";
 
@@ -103,9 +92,9 @@ public class GenericTransformator implements Transformator {
 
   /**
    * Construct a transformation table from the phonetic file
+   * 
    * @param phonetic the phonetic file as specified in aspell
-   * @throws java.io.IOException indicates a problem while reading
-   * the phonetic file
+   * @throws java.io.IOException indicates a problem while reading the phonetic file
    */
   public GenericTransformator(File phonetic) throws IOException {
     buildRules(new BufferedReader(new FileReader(phonetic)));
@@ -115,10 +104,10 @@ public class GenericTransformator implements Transformator {
 
   /**
    * Construct a transformation table from the phonetic file
+   * 
    * @param phonetic the phonetic file as specified in aspell
    * @param encoding the character set required
-   * @throws java.io.IOException indicates a problem while reading
-   * the phonetic file
+   * @throws java.io.IOException indicates a problem while reading the phonetic file
    */
   public GenericTransformator(File phonetic, String encoding) throws IOException {
     buildRules(new BufferedReader(new InputStreamReader(new FileInputStream(phonetic), encoding)));
@@ -127,10 +116,9 @@ public class GenericTransformator implements Transformator {
 
   /**
    * Construct a transformation table from the phonetic file
-   * @param phonetic the phonetic file as specified in aspell. The file is
-   * supplied as a reader.
-   * @throws java.io.IOException indicates a problem while reading
-   * the phonetic information
+   * 
+   * @param phonetic the phonetic file as specified in aspell. The file is supplied as a reader.
+   * @throws java.io.IOException indicates a problem while reading the phonetic information
    */
   public GenericTransformator(Reader phonetic) throws IOException {
     buildRules(new BufferedReader(phonetic));
@@ -138,13 +126,11 @@ public class GenericTransformator implements Transformator {
   }
 
   /**
-   * Goes through an alphabet and makes sure that only one of those letters
-   * that are coded equally will be in the replace list.
-   * In other words, it removes any letters in the alphabet
-   * that are redundant phonetically.
-   *
+   * Goes through an alphabet and makes sure that only one of those letters that are coded equally will be in the
+   * replace list. In other words, it removes any letters in the alphabet that are redundant phonetically.
+   * 
    * This is done to improve speed in the getSuggestion method.
-   *
+   * 
    * @param alphabet The complete alphabet to wash.
    * @return The washed alphabet to be used as replace list.
    */
@@ -170,10 +156,10 @@ public class GenericTransformator implements Transformator {
     return washedArray;
   }
 
-
   /**
-   * Takes out all single character replacements and put them in a char array.
-   * This array can later be used for adding or changing letters in getSuggestion().
+   * Takes out all single character replacements and put them in a char array. This array can later be used for adding
+   * or changing letters in getSuggestion().
+   * 
    * @return char[] An array of chars with replacements characters
    */
   public char[] getCodeReplaceList() {
@@ -196,8 +182,9 @@ public class GenericTransformator implements Transformator {
   }
 
   /**
-   * Builds up an char array with the chars in the alphabet of the language as it was read from the
-   * alphabet tag in the phonetic file.
+   * Builds up an char array with the chars in the alphabet of the language as it was read from the alphabet tag in the
+   * phonetic file.
+   * 
    * @return char[] An array of chars representing the alphabet or null if no alphabet was available.
    */
   public char[] getReplaceList() {
@@ -206,6 +193,7 @@ public class GenericTransformator implements Transformator {
 
   /**
    * Builds the phonetic code of the word.
+   * 
    * @param word the word to transform
    * @return the phonetic transformation of the word
    */
@@ -229,7 +217,7 @@ public class GenericTransformator implements Transformator {
       }
 
       for (int i = 0; i < ruleArray.length; i++) {
-        //System.out.println("Testing rule#:"+i);
+        // System.out.println("Testing rule#:"+i);
         rule = (TransformationRule) ruleArray[i];
         if (rule.startsWithExp() && startPos > 0)
           continue;
@@ -243,14 +231,14 @@ public class GenericTransformator implements Transformator {
           StringUtility.replace(str, startPos, startPos + rule.getTakeOut(), replaceExp);
           strLength -= rule.getTakeOut();
           strLength += add;
-          //System.out.println("Replacing with rule#:"+i+" add="+add);
+          // System.out.println("Replacing with rule#:"+i+" add="+add);
           break;
         }
       }
       startPos += add;
     }
-    //System.out.println(word);
-    //System.out.println(str.toString());
+    // System.out.println(word);
+    // System.out.println(str.toString());
     return str.toString();
   }
 
@@ -286,18 +274,15 @@ public class GenericTransformator implements Transformator {
     }
 
     // str contains two groups of characters separated by white space(s).
-    // The fisrt group is the "match expression". The second group is the 
-    // "replacement expression" giving the phonetic equivalent of the 
+    // The fisrt group is the "match expression". The second group is the
+    // "replacement expression" giving the phonetic equivalent of the
     // "match expression".
     TransformationRule rule = null;
     StringBuffer matchExp = new StringBuffer();
     StringBuffer replaceExp = new StringBuffer();
-    boolean start = false,
-        end = false;
-    int takeOutPart = 0,
-        matchLength = 0;
-    boolean match = true,
-        inMulti = false;
+    boolean start = false, end = false;
+    int takeOutPart = 0, matchLength = 0;
+    boolean match = true, inMulti = false;
     for (int i = 0; i < str.length(); i++) {
       if (Character.isWhitespace(str.charAt(i))) {
         match = false;
@@ -325,10 +310,10 @@ public class GenericTransformator implements Transformator {
     }
     if (replaceExp.toString().equals(REPLACEVOID)) {
       replaceExp = new StringBuffer("");
-      //System.out.println("Changing _ to \"\" for "+matchExp.toString());
+      // System.out.println("Changing _ to \"\" for "+matchExp.toString());
     }
     rule = new TransformationRule(matchExp.toString(), replaceExp.toString(), takeOutPart, matchLength, start, end);
-    //System.out.println(rule.toString());
+    // System.out.println(rule.toString());
     ruleList.addElement(rule);
   }
 
@@ -350,9 +335,8 @@ public class GenericTransformator implements Transformator {
 
   // Inner Classes
   /*
-  * Holds the match string and the replace string and all the rule attributes.
-  * Is responsible for indicating matches.
-  */
+   * Holds the match string and the replace string and all the rule attributes. Is responsible for indicating matches.
+   */
   private class TransformationRule {
 
     private String replace;
@@ -373,9 +357,9 @@ public class GenericTransformator implements Transformator {
     }
 
     /*
-    * Returns true if word from pos and forward matches the match string.
-    * Precondition: wordPos+matchLength<word.length()
-    */
+     * Returns true if word from pos and forward matches the match string. Precondition:
+     * wordPos+matchLength<word.length()
+     */
     public boolean isMatching(StringBuffer word, int wordPos) {
       boolean matching = true, inMulti = false, multiMatch = false;
       char matchCh;

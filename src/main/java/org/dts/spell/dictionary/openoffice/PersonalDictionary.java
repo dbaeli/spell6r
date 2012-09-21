@@ -21,100 +21,100 @@ import java.util.Set;
  */
 public class PersonalDictionary {
 
-    protected Set wordsList = new HashSet();
-    protected String encoding;
-    protected File personalFile;
+  protected Set wordsList = new HashSet();
+  protected String encoding;
+  protected File personalFile;
 
-    public PersonalDictionary(File personalFile, String encoding) {
-        super();
-        this.encoding = encoding;
-        this.personalFile = personalFile;
-        try {
-            loadDictionary();
-        } catch (IOException e) {
-            System.err.println("PersonalDictionary not initialized " + personalFile.getAbsolutePath());
+  public PersonalDictionary(File personalFile, String encoding) {
+    super();
+    this.encoding = encoding;
+    this.personalFile = personalFile;
+    try {
+      loadDictionary();
+    } catch (IOException e) {
+      System.err.println("PersonalDictionary not initialized " + personalFile.getAbsolutePath());
+    }
+  }
+
+  protected void loadDictionary() throws IOException {
+
+    BufferedReader rd = null;
+    try {
+      if (null != personalFile && personalFile.exists() && !personalFile.isDirectory()) {
+        rd = new BufferedReader(new InputStreamReader(new FileInputStream(personalFile), encoding));
+        String line = rd.readLine();
+        while (line != null) {
+          wordsList.add(line.trim());
+          line = rd.readLine();
         }
+      }
+    } finally {
+      if (rd != null) {
+        rd.close();
+      }
     }
+  }
 
-    protected void loadDictionary() throws IOException {
+  public void delete() {
+    wordsList.clear();
+    personalFile.delete();
+  }
 
-        BufferedReader rd = null;
-        try {
-            if (null != personalFile && personalFile.exists() && !personalFile.isDirectory()) {
-                rd = new BufferedReader(new InputStreamReader(new FileInputStream(personalFile), encoding));
-                String line = rd.readLine();
-                while (line != null) {
-                    wordsList.add(line.trim());
-                    line = rd.readLine();
-                }
-            }
-        } finally {
-            if (rd != null) {
-                rd.close();
-            }
-        }
+  public void addWord(String word) {
+    if (word != null && wordsList.add(word)) {
+      // System.out.println("Add personal word:" + word);
+      dictionaryChanged();
     }
+  }
 
-    public void delete() {
-        wordsList.clear();
-        personalFile.delete();
+  public void addWords(List words) {
+    if (words != null && words.addAll(words)) {
+      dictionaryChanged();
     }
+  }
 
-    public void addWord(String word) {
-        if (word != null && wordsList.add(word)) {
-            // System.out.println("Add personal word:" + word);
-            dictionaryChanged();
-        }
+  public void removeWord(String word) {
+    if (wordsList.remove(word)) {
+      dictionaryChanged();
     }
+  }
 
-    public void addWords(List words) {
-        if (words != null && words.addAll(words)) {
-            dictionaryChanged();
-        }
+  public void removeWords(List words) {
+    if (words != null && wordsList.removeAll(words)) {
+      dictionaryChanged();
     }
+  }
 
-    public void removeWord(String word) {
-        if (wordsList.remove(word)) {
-            dictionaryChanged();
-        }
+  public List getWords() {
+    Object[] arrayWords = wordsList.toArray();
+    Arrays.sort(arrayWords);
+    List theWords = new ArrayList();
+    for (int i = 0; i < arrayWords.length; i++) {
+      String value = (String) arrayWords[i];
+      if (value != null && value.trim().length() > 0) {
+        theWords.add(value.trim());
+      }
     }
+    return theWords;
+  }
 
-    public void removeWords(List words) {
-        if (words != null && wordsList.removeAll(words)) {
-            dictionaryChanged();
-        }
+  protected void dictionaryChanged() {
+    PrintWriter pw = null;
+    try {
+      pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(personalFile), encoding));
+      Object[] arrayWords = wordsList.toArray();
+      Arrays.sort(arrayWords);
+      for (int i = 0; i < arrayWords.length; i++) {
+        pw.println(arrayWords[i]);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } finally {
+      try {
+        Utils.close(pw);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
-
-    public List getWords() {
-        Object[] arrayWords = wordsList.toArray();
-        Arrays.sort(arrayWords);
-        List theWords = new ArrayList();
-        for (int i = 0; i < arrayWords.length; i++) {
-            String value = (String) arrayWords[i];
-            if (value != null && value.trim().length() > 0) {
-                theWords.add(value.trim());
-            }
-        }
-        return theWords;
-    }
-
-    protected void dictionaryChanged() {
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(personalFile), encoding));
-            Object[] arrayWords = wordsList.toArray();
-            Arrays.sort(arrayWords);
-            for (int i = 0; i < arrayWords.length; i++) {
-                pw.println(arrayWords[i]);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                Utils.close(pw);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
+  }
 }

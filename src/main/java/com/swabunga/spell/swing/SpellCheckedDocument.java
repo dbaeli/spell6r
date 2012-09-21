@@ -1,34 +1,36 @@
 /*
-Jazzy - a Java library for Spell Checking
-Copyright (C) 2001 Mindaugas Idzelis
-Full text of license can be found in LICENSE.txt
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Jazzy - a Java library for Spell Checking Copyright (C) 2001 Mindaugas Idzelis Full text of license can be found in
+ * LICENSE.txt
+ * 
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 package com.swabunga.spell.swing;
+
+import java.awt.Color;
+import java.util.StringTokenizer;
+
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
 
 import com.swabunga.spell.engine.SpellDictionary;
 
-import javax.swing.text.*;
-import java.awt.*;
-import java.util.StringTokenizer;
-
 /**
  * @author Stig Tanggaard
- *
- *
+ * 
+ * 
  */
 public class SpellCheckedDocument extends DefaultStyledDocument {
 
@@ -46,7 +48,7 @@ public class SpellCheckedDocument extends DefaultStyledDocument {
     super();
     SpellCheckedDocument.dictionary = dictionary;
 
-//    StyleContext context = StyleContext.getDefaultStyleContext();
+    // StyleContext context = StyleContext.getDefaultStyleContext();
     Style def = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
     normal = addStyle("normal", def);
     errorstyle = addStyle(ERROR_STYLE, def);
@@ -60,22 +62,26 @@ public class SpellCheckedDocument extends DefaultStyledDocument {
       int end = getLength();
       try {
         String text = getText(start, end - start);
-        //System.out.println(text);
+        // System.out.println(text);
         checkoffset = text.indexOf(" ");
-        if (checkoffset == -1) return;
+        if (checkoffset == -1)
+          return;
         checkend = text.lastIndexOf(" ");
-        if (checkend == -1) return;
-        if (checkoffset == checkend) return;
+        if (checkend == -1)
+          return;
+        if (checkoffset == checkend)
+          return;
         checkoffset += 1;
         checkingline = text.substring(checkoffset, checkend);
-        if (checkingline == null) return;
-        //System.out.println(":" + checkingline + ":");
+        if (checkingline == null)
+          return;
+        // System.out.println(":" + checkingline + ":");
         checkoffset += start;
         checkend += start;
         setCharacterAttributes(checkoffset, checkend - checkoffset, normal, true);
-        //System.out.println("" + checkoffset + ":" + (checkend - checkoffset));
+        // System.out.println("" + checkoffset + ":" + (checkend - checkoffset));
         StringTokenizer token = new StringTokenizer(checkingline, " ");
-        //errors = new Vector();
+        // errors = new Vector();
         while (token.hasMoreTokens()) {
           String tok = token.nextToken();
           tok = clean(tok);
@@ -98,11 +104,11 @@ public class SpellCheckedDocument extends DefaultStyledDocument {
               setCharacterAttributes(checkingline.indexOf(t2) + checkoffset, t2.length(), errorstyle, false);
             }
           } else if (!dictionary.isCorrect(tok)) {
-            //System.out.println(tok + tok.length());
+            // System.out.println(tok + tok.length());
             setCharacterAttributes(checkingline.indexOf(tok) + checkoffset, tok.length(), errorstyle, false);
           }
         }
-        //setAttributes(a, errorstyle);
+        // setAttributes(a, errorstyle);
       } catch (BadLocationException f) {
       }
     }
@@ -116,32 +122,39 @@ public class SpellCheckedDocument extends DefaultStyledDocument {
   }
 
   public void insertString(int offset, String string, AttributeSet a) throws BadLocationException {
-    //if(normal == null) normal = a;
+    // if(normal == null) normal = a;
     super.insertString(offset, string, normal);
-    if (!checkspelling) return;
+    if (!checkspelling)
+      return;
     if (dictionary != null) {
       int start = offset - 30;
       int end = offset + 30;
-      if (start < 0) start = 0;
-      if (end > getLength()) end = getLength();
+      if (start < 0)
+        start = 0;
+      if (end > getLength())
+        end = getLength();
       try {
         String text = getText(start, end - start);
-        //System.out.println(text);
+        // System.out.println(text);
         checkoffset = text.indexOf(" ");
-        if (checkoffset == -1) return;
+        if (checkoffset == -1)
+          return;
         checkend = text.lastIndexOf(" ");
-        if (checkend == -1) return;
-        if (checkoffset == checkend) return;
+        if (checkend == -1)
+          return;
+        if (checkoffset == checkend)
+          return;
         checkoffset += 1;
         checkingline = text.substring(checkoffset, checkend);
-        if (checkingline == null) return;
-        //System.out.println(":" + checkingline + ":");
+        if (checkingline == null)
+          return;
+        // System.out.println(":" + checkingline + ":");
         checkoffset += start;
         checkend += start;
         setCharacterAttributes(checkoffset, checkend - checkoffset, normal, true);
-        //System.out.println("" + checkoffset + ":" + (checkend - checkoffset));
+        // System.out.println("" + checkoffset + ":" + (checkend - checkoffset));
         StringTokenizer token = new StringTokenizer(checkingline, " ");
-        //errors = new Vector();
+        // errors = new Vector();
         while (token.hasMoreTokens()) {
           String tok = token.nextToken();
           tok = clean(tok);
@@ -172,39 +185,45 @@ public class SpellCheckedDocument extends DefaultStyledDocument {
 
         }
 
-        //setAttributes(a, errorstyle);
+        // setAttributes(a, errorstyle);
       } catch (BadLocationException f) {
       }
     }
   }
 
-
   public void remove(int offset, int len) throws BadLocationException {
     super.remove(offset, len);
-    if (!checkspelling) return;
+    if (!checkspelling)
+      return;
     if (dictionary != null) {
       int start = offset - 30;
       int end = offset + 30;
-      if (start < 0) start = 0;
-      if (end > getLength()) end = getLength();
+      if (start < 0)
+        start = 0;
+      if (end > getLength())
+        end = getLength();
       try {
         String text = getText(start, end - start);
-        //System.out.println(text);
+        // System.out.println(text);
         checkoffset = text.indexOf(" ");
-        if (checkoffset == -1) return;
+        if (checkoffset == -1)
+          return;
         checkend = text.lastIndexOf(" ");
-        if (checkend == -1) return;
-        if (checkoffset == checkend) return;
+        if (checkend == -1)
+          return;
+        if (checkoffset == checkend)
+          return;
         checkoffset += 1;
         checkingline = text.substring(checkoffset, checkend);
-        if (checkingline == null) return;
-        //System.out.println(":" + checkingline + ":");
+        if (checkingline == null)
+          return;
+        // System.out.println(":" + checkingline + ":");
         checkoffset += start;
         checkend += start;
         setCharacterAttributes(checkoffset, checkend - checkoffset, normal, true);
-        //System.out.println("" + checkoffset + ":" + (checkend - checkoffset));
+        // System.out.println("" + checkoffset + ":" + (checkend - checkoffset));
         StringTokenizer token = new StringTokenizer(checkingline, " ");
-        //errors = new Vector();
+        // errors = new Vector();
 
         while (token.hasMoreTokens()) {
           String tok = token.nextToken();
@@ -219,26 +238,25 @@ public class SpellCheckedDocument extends DefaultStyledDocument {
               setCharacterAttributes(checkingline.indexOf(t2) + checkoffset, t2.length(), errorstyle, false);
             }
           } else if (!dictionary.isCorrect(tok)) {
-            //System.out.println(tok + tok.length());
+            // System.out.println(tok + tok.length());
             setCharacterAttributes(checkingline.indexOf(tok) + checkoffset, tok.length(), errorstyle, false);
           }
         }
-        //setAttributes(a, errorstyle);
+        // setAttributes(a, errorstyle);
       } catch (BadLocationException f) {
       }
     }
   }
 
-
   public String clean(String word) {
 
     char[] chars = word.toCharArray();
-    //String wordd = "";
+    // String wordd = "";
 
-    //if(chars.length > 0)
+    // if(chars.length > 0)
     int index = chars.length - 1;
     while (!Character.isLetterOrDigit(chars[index]) && index > 0) {
-      //System.out.println("isocontrol " + word);
+      // System.out.println("isocontrol " + word);
       index--;
     }
     word = word.substring(0, index + 1);
@@ -248,14 +266,13 @@ public class SpellCheckedDocument extends DefaultStyledDocument {
     index = 0;
     chars = word.toCharArray();
     while (!Character.isLetterOrDigit(chars[index]) && index < chars.length - 1) {
-      //System.out.println("isocontrol " + word);
+      // System.out.println("isocontrol " + word);
       index++;
     }
     word = word.substring(index);
 
     return word;
   }
-
 
   public void checkSplittedWords(String divider, String line) {
   }

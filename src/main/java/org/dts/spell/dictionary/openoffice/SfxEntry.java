@@ -1,6 +1,5 @@
 /*
  * Created on 29/12/2004
- * 
  */
 package org.dts.spell.dictionary.openoffice;
 
@@ -9,156 +8,155 @@ package org.dts.spell.dictionary.openoffice;
  * 
  */
 public class SfxEntry extends AffEntry {
-    AffixMgr pmyMgr;
+  AffixMgr pmyMgr;
 
-    String rappnd;
+  String rappnd;
 
-    SfxEntry next;
+  SfxEntry next;
 
-    SfxEntry nexteq;
+  SfxEntry nexteq;
 
-    SfxEntry nextne;
+  SfxEntry nextne;
 
-    SfxEntry flgnxt;
+  SfxEntry flgnxt;
 
-    public SfxEntry(AffixMgr pmgr, AffEntry dp) {
-        // register affix manager
-        pmyMgr = pmgr;
+  public SfxEntry(AffixMgr pmgr, AffEntry dp) {
+    // register affix manager
+    pmyMgr = pmgr;
 
-        // set up its intial values
-        achar = dp.achar; // char flag
-        strip = dp.strip; // string to strip
-        appnd = dp.appnd; // string to append
-        numconds = dp.numconds; // number of conditions to match
-        xpflg = dp.xpflg; // cross product flag
+    // set up its intial values
+    achar = dp.achar; // char flag
+    strip = dp.strip; // string to strip
+    appnd = dp.appnd; // string to append
+    numconds = dp.numconds; // number of conditions to match
+    xpflg = dp.xpflg; // cross product flag
 
-        // then copy over all of the conditions
-        System.arraycopy(dp.conds, 0, conds, 0, Utils.SETSIZE);
+    // then copy over all of the conditions
+    System.arraycopy(dp.conds, 0, conds, 0, Utils.SETSIZE);
 
-        rappnd = Utils.myRevStrDup(appnd);
-    }
+    rappnd = Utils.myRevStrDup(appnd);
+  }
 
-    public HEntry check(String word, int optflags, AffEntry ppfx) {
-        int len = word.length();
-        int appndl = appnd.length();
-        int stripl = strip.length();
+  public HEntry check(String word, int optflags, AffEntry ppfx) {
+    int len = word.length();
+    int appndl = appnd.length();
+    int stripl = strip.length();
 
-        int tmpl; // length of tmpword
-        int cond; // condition beng examined
-        HEntry he; // hash entry pointer
-        int cp;
-        String tmpword;
-        PfxEntry ep = (PfxEntry) ppfx;
+    int tmpl; // length of tmpword
+    int cond; // condition beng examined
+    HEntry he; // hash entry pointer
+    int cp;
+    String tmpword;
+    PfxEntry ep = (PfxEntry) ppfx;
 
-        // if this suffix is being cross checked with a prefix
-        // but it does not support cross products skip it
+    // if this suffix is being cross checked with a prefix
+    // but it does not support cross products skip it
 
-        if ((optflags & Utils.XPRODUCT) != 0 && (xpflg & Utils.XPRODUCT) == 0)
-            return null;
+    if ((optflags & Utils.XPRODUCT) != 0 && (xpflg & Utils.XPRODUCT) == 0)
+      return null;
 
-        // upon entry suffix is 0 length or already matches the end of the word.
-        // So if the remaining root word has positive length
-        // and if there are enough chars in root word and added back strip chars
-        // to meet the number of characters conditions, then test it
+    // upon entry suffix is 0 length or already matches the end of the word.
+    // So if the remaining root word has positive length
+    // and if there are enough chars in root word and added back strip chars
+    // to meet the number of characters conditions, then test it
 
-        tmpl = len - appndl;
+    tmpl = len - appndl;
 
-        if ((tmpl > 0) && (tmpl + stripl >= numconds)) {
-            // generate new root word by removing suffix and adding
-            // back any characters that would have been stripped or
-            // or null terminating the shorter string
+    if ((tmpl > 0) && (tmpl + stripl >= numconds)) {
+      // generate new root word by removing suffix and adding
+      // back any characters that would have been stripped or
+      // or null terminating the shorter string
 
-            cp = tmpl + stripl;
-            tmpword = word.substring(0, tmpl) + strip;
+      cp = tmpl + stripl;
+      tmpword = word.substring(0, tmpl) + strip;
 
-            // now make sure all of the conditions on characters
-            // are met. Please see the appendix at the end of
-            // this file for more info on exactly what is being
-            // tested
+      // now make sure all of the conditions on characters
+      // are met. Please see the appendix at the end of
+      // this file for more info on exactly what is being
+      // tested
 
-            for (cond = numconds; --cond >= 0;)
-                if ((conds[tmpword.charAt(--cp)] & (1 << cond)) == 0)
-                    break;
+      for (cond = numconds; --cond >= 0;)
+        if ((conds[tmpword.charAt(--cp)] & (1 << cond)) == 0)
+          break;
 
-            // if all conditions are met then check if resulting
-            // root word in the dictionary
+      // if all conditions are met then check if resulting
+      // root word in the dictionary
 
-            if (cond < 0) {
-                if ((he = pmyMgr.lookup(tmpword)) != null) {
-                    if (Utils.TestAff(he.astr, achar, he.astr.length())
-                                    && ((optflags & Utils.XPRODUCT) == 0 || Utils.TestAff(he.astr, ep.getFlag(), he.astr.length())))
-                        return he;
-                }
-            }
+      if (cond < 0) {
+        if ((he = pmyMgr.lookup(tmpword)) != null) {
+          if (Utils.TestAff(he.astr, achar, he.astr.length()) && ((optflags & Utils.XPRODUCT) == 0 || Utils.TestAff(he.astr, ep.getFlag(), he.astr.length())))
+            return he;
         }
-
-        return null;
+      }
     }
 
-    public boolean allowCross() {
-        return ((xpflg & Utils.XPRODUCT) != 0);
+    return null;
+  }
+
+  public boolean allowCross() {
+    return ((xpflg & Utils.XPRODUCT) != 0);
+  }
+
+  public char getFlag() {
+    return achar;
+  }
+
+  public String getKey() {
+    return rappnd;
+  }
+
+  public String add(String word) {
+    int len = word.length();
+    int stripl = strip.length();
+
+    int cond;
+    // String tword ;
+
+    /* make sure all conditions match */
+    if ((len > stripl) && (len >= numconds)) {
+      int cp = len;
+
+      for (cond = numconds; --cond >= 0;)
+        if ((conds[word.charAt(--cp)] & (1 << cond)) == 0)
+          break;
+
+      /* we have a match so add suffix */
+      if (cond < 0)
+        return word.substring(0, len - stripl) + appnd;
     }
 
-    public char getFlag() {
-        return achar;
-    }
+    return null;
+  }
 
-    public String getKey() {
-        return rappnd;
-    }
+  public SfxEntry getNext() {
+    return next;
+  }
 
-    public String add(String word) {
-        int len = word.length();
-        int stripl = strip.length();
+  public SfxEntry getNextNE() {
+    return nextne;
+  }
 
-        int cond;
-        // String tword ;
+  public SfxEntry getNextEQ() {
+    return nexteq;
+  }
 
-        /* make sure all conditions match */
-        if ((len > stripl) && (len >= numconds)) {
-            int cp = len;
+  public SfxEntry getFlgNxt() {
+    return flgnxt;
+  }
 
-            for (cond = numconds; --cond >= 0;)
-                if ((conds[word.charAt(--cp)] & (1 << cond)) == 0)
-                    break;
+  public void setNext(SfxEntry ptr) {
+    next = ptr;
+  }
 
-            /* we have a match so add suffix */
-            if (cond < 0)
-                return word.substring(0, len - stripl) + appnd;
-        }
+  public void setNextNE(SfxEntry ptr) {
+    nextne = ptr;
+  }
 
-        return null;
-    }
+  public void setNextEQ(SfxEntry ptr) {
+    nexteq = ptr;
+  }
 
-    public SfxEntry getNext() {
-        return next;
-    }
-
-    public SfxEntry getNextNE() {
-        return nextne;
-    }
-
-    public SfxEntry getNextEQ() {
-        return nexteq;
-    }
-
-    public SfxEntry getFlgNxt() {
-        return flgnxt;
-    }
-
-    public void setNext(SfxEntry ptr) {
-        next = ptr;
-    }
-
-    public void setNextNE(SfxEntry ptr) {
-        nextne = ptr;
-    }
-
-    public void setNextEQ(SfxEntry ptr) {
-        nexteq = ptr;
-    }
-
-    public void setFlgNxt(SfxEntry ptr) {
-        flgnxt = ptr;
-    }
+  public void setFlgNxt(SfxEntry ptr) {
+    flgnxt = ptr;
+  }
 }

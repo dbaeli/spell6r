@@ -1,48 +1,58 @@
 /*
-Jazzy - a Java library for Spell Checking
-Copyright (C) 2001 Mindaugas Idzelis
-Full text of license can be found in LICENSE.txt
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Jazzy - a Java library for Spell Checking Copyright (C) 2001 Mindaugas Idzelis Full text of license can be found in
+ * LICENSE.txt
+ * 
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ * 
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 package com.swabunga.spell.swing;
+
+import java.awt.Cursor;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.io.File;
+import java.util.List;
+
+import javax.swing.JEditorPane;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.plaf.TextUI;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.Position;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledEditorKit;
 
 import com.swabunga.spell.engine.SpellDictionary;
 import com.swabunga.spell.engine.SpellDictionaryHashMap;
 import com.swabunga.spell.engine.Word;
 
-import javax.swing.*;
-import javax.swing.plaf.TextUI;
-import javax.swing.text.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.util.List;
-
 /**
- *
- * use:
- * JTextPane pane = new JTextPane();
- * pane.setEditorKit(new SpellEditorKit());
- *
- *
- *
- *
- *
- * @author     Stig Tanggaard
- * April 14, 2002
+ * 
+ * use: JTextPane pane = new JTextPane(); pane.setEditorKit(new SpellEditorKit());
+ * 
+ * 
+ * 
+ * 
+ * 
+ * @author Stig Tanggaard April 14, 2002
  */
 public class SpellEditorKit extends StyledEditorKit {
 
@@ -71,7 +81,7 @@ public class SpellEditorKit extends StyledEditorKit {
     c.addMouseMotionListener(adapt);
     c.addMouseListener(adapt);
     super.install(c);
-    //System.out.println("install stylededitorkit on editorpane");
+    // System.out.println("install stylededitorkit on editorpane");
     defaultCursor = c.getCursor();
   }
 
@@ -86,8 +96,9 @@ public class SpellEditorKit extends StyledEditorKit {
      */
     private boolean curElemImage = false;
     private String href = null;
-    /** This is used by viewToModel to avoid allocing a new array each
-     * time. */
+    /**
+     * This is used by viewToModel to avoid allocing a new array each time.
+     */
     private Position.Bias[] bias = new Position.Bias[1];
     /**
      * Current offset.
@@ -97,11 +108,9 @@ public class SpellEditorKit extends StyledEditorKit {
     private int linkoffset = 0;
 
     /**
-     * Called for a mouse click event.
-     * If the component is read-only (ie a browser) then
-     * the clicked event is used to drive an attempt to
-     * follow the reference specified by a link.
-     *
+     * Called for a mouse click event. If the component is read-only (ie a browser) then the clicked event is used to
+     * drive an attempt to follow the reference specified by a link.
+     * 
      * @param e the mouse event
      * @see MouseListener#mouseClicked
      */
@@ -114,7 +123,7 @@ public class SpellEditorKit extends StyledEditorKit {
         Point pt = new Point(e.getX(), e.getY());
         int pos = editor.viewToModel(pt);
         if (pos >= 0 && href != null) {
-          //JPopupMenu menu = new JPopupMenu();
+          // JPopupMenu menu = new JPopupMenu();
           SpellCheckedDocument hdoc = (SpellCheckedDocument) editor.getDocument();
           Element elem = hdoc.getCharacterElement(pos);
           try {
@@ -142,7 +151,7 @@ public class SpellEditorKit extends StyledEditorKit {
             popup.add(item);
             popup.show(editor, e.getX(), e.getY());
 
-            //System.out.println("" + elem.getStartOffset() + " count " + elem.getEndOffset());
+            // System.out.println("" + elem.getStartOffset() + " count " + elem.getEndOffset());
           } catch (BadLocationException f) {
             System.out.println("" + elem.getStartOffset() + " count " + elem.getElementCount());
           }
@@ -151,7 +160,6 @@ public class SpellEditorKit extends StyledEditorKit {
       href = null;
     }
 
-
     // ignore the drags
     public void mouseDragged(MouseEvent e) {
     }
@@ -159,9 +167,9 @@ public class SpellEditorKit extends StyledEditorKit {
     // track the moving of the mouse.
     public void mouseMoved(MouseEvent e) {
       int pos = -1;
-//      int offset = 0;
+      // int offset = 0;
       JEditorPane editor = (JEditorPane) e.getSource();
-      //MailEditorKit kit = (MailEditorKit)editor.getEditorKit();
+      // MailEditorKit kit = (MailEditorKit)editor.getEditorKit();
       boolean adjustCursor = true;
       Cursor newCursor = defaultCursor;
       if (editor.isEditable()) {
@@ -177,24 +185,24 @@ public class SpellEditorKit extends StyledEditorKit {
             elem = null;
           }
           if (curElem != elem || curElemImage) {
-//            Element lastElem = curElem;
+            // Element lastElem = curElem;
             curElem = elem;
-            //String href = null;
+            // String href = null;
             curElemImage = false;
             if (elem != null) {
               AttributeSet a = elem.getAttributes();
-              //System.out.println(
-              //  a.getAttribute(StyleConstants.NameAttribute));
+              // System.out.println(
+              // a.getAttribute(StyleConstants.NameAttribute));
 
               if (a.getAttribute(StyleConstants.NameAttribute) == SpellCheckedDocument.ERROR_STYLE) {
                 newCursor = linkCursor;
                 linkoffset = elem.getStartOffset();
-                //System.out.println("test + " + pos);
+                // System.out.println("test + " + pos);
                 try {
                   href = editor.getDocument().getText(elem.getStartOffset(), elem.getEndOffset() - elem.getStartOffset());
                 } catch (BadLocationException f) {
                 }
-//                offset = elem.getStartOffset();
+                // offset = elem.getStartOffset();
 
               } else {
                 href = null;
@@ -206,16 +214,15 @@ public class SpellEditorKit extends StyledEditorKit {
           curOffset = pos;
         }
       }
-      //adjustCursor &&
+      // adjustCursor &&
       if (adjustCursor && editor.getCursor() != newCursor) {
         editor.setCursor(newCursor);
       }
     }
 
     /**
-     * Returns true if the View representing <code>e</code> contains
-     * the location <code>x</code>, <code>y</code>. <code>offset</code>
-     * gives the offset into the Document to check for.
+     * Returns true if the View representing <code>e</code> contains the location <code>x</code>, <code>y</code>.
+     * <code>offset</code> gives the offset into the Document to check for.
      */
     private boolean doesElementContainLocation(JEditorPane editor, Element e, int offset, int x, int y) {
       if (e != null && offset > 0 && e.getStartOffset() == offset) {
@@ -234,7 +241,6 @@ public class SpellEditorKit extends StyledEditorKit {
     }
 
   }
-
 
   class ReplaceListener implements ActionListener {
     int offset;
