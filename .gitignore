@@ -1,5 +1,7 @@
 *.class
 target/
+dist/
+bin/
 *.iml
 .project
 .classpath
