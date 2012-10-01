@@ -92,6 +92,8 @@ public class DictionaryUtils {
 
   public static Map<String, OpenOfficeSpellDictionary> fetchDictionaries() {
     Map<String, OpenOfficeSpellDictionary> dicts = new HashMap<String, OpenOfficeSpellDictionary>();
+
+
     URL resource = Spell6rChecker.class.getResource("dictionaries/");
     if (resource != null) {
       scanResourceForDictionnary(dicts, resource.getPath());
@@ -100,8 +102,10 @@ public class DictionaryUtils {
     if (resource != null) {
       scanResourceForDictionnary(dicts, resource.getPath());
     }
+
     scanResourceForDictionnary(dicts, "dictionaries/");
     return dicts;
   }
+
 
 }

@@ -122,6 +122,13 @@ public class SpellChecker {
   }
 
   /**
+   * @return dictionary the dictionary to use when the user specify a new word to add.
+   */
+  public SpellDictionary getUserDictionary() {
+    return userdictionary;
+  }
+
+  /**
    * Supply the instance of the configuration holding the spell checking engine parameters.
    * 
    * @return Current Configuration

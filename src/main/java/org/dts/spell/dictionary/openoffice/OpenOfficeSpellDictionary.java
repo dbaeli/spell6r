@@ -145,7 +145,7 @@ public class OpenOfficeSpellDictionary implements SpellDictionary {
     }
   }
 
-  private void initPersonalWordsSupport(File personalFile) throws IOException {
+  public void initPersonalWordsSupport(File personalFile) throws IOException {
 
     personalDictionary = new PersonalDictionary(personalFile, dictionaryEngine.get_dic_encoding()) {
       /**
