@@ -219,7 +219,12 @@ public class SpellChecker {
    */
   public final static boolean isINETWord(String word) {
     String lowerCaseWord = word.toLowerCase();
-    return lowerCaseWord.startsWith("http://") || lowerCaseWord.startsWith("www.") || lowerCaseWord.startsWith("ftp://") || lowerCaseWord.startsWith("https://") || lowerCaseWord.startsWith("ftps://");
+    return lowerCaseWord.startsWith("http://")
+                    || lowerCaseWord.startsWith("www.")
+                    || lowerCaseWord.startsWith("ftp://")
+                    || lowerCaseWord.startsWith("https://")
+                    || lowerCaseWord.startsWith("ftps://")
+                    || lowerCaseWord.contains("@");
   }
 
   /**
@@ -483,7 +488,10 @@ public class SpellChecker {
       String word = tokenizer.nextWord();
       // Check the spelling of the word
       if (!isCorrect(word)) {
-        if ((config.getBoolean(Configuration.SPELL_IGNOREMIXEDCASE) && isMixedCaseWord(word, tokenizer.isNewSentence())) || (config.getBoolean(Configuration.SPELL_IGNOREUPPERCASE) && isUpperCaseWord(word)) || (config.getBoolean(Configuration.SPELL_IGNOREDIGITWORDS) && isDigitWord(word)) || (config.getBoolean(Configuration.SPELL_IGNOREINTERNETADDRESSES) && isINETWord(word))) {
+        if ((config.getBoolean(Configuration.SPELL_IGNOREMIXEDCASE) && isMixedCaseWord(word, tokenizer.isNewSentence()))
+                        || (config.getBoolean(Configuration.SPELL_IGNOREUPPERCASE) && isUpperCaseWord(word))
+                        || (config.getBoolean(Configuration.SPELL_IGNOREDIGITWORDS) && isDigitWord(word))
+                        || (config.getBoolean(Configuration.SPELL_IGNOREINTERNETADDRESSES) && isINETWord(word))) {
           // Null event. Since we are ignoring this word due
           // to one of the above cases.
         } else {

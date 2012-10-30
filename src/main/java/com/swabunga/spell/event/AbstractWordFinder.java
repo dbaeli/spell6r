@@ -211,6 +211,7 @@ public abstract class AbstractWordFinder implements WordFinder {
       case '@':
       case '.':
       case '_':
+      case '-':
         out = (Character.isLetterOrDigit(prev) && Character.isLetterOrDigit(next));
         break;
       default:

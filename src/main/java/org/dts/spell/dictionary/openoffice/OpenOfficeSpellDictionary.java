@@ -2,6 +2,7 @@ package org.dts.spell.dictionary.openoffice;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,8 +32,12 @@ public class OpenOfficeSpellDictionary implements SpellDictionary {
   }
 
   public OpenOfficeSpellDictionary(File dictFile, File affFile) throws IOException {
-    initFromFiles(dictFile, affFile, null);
-  }
+      initFromFiles(dictFile, affFile, null);
+    }
+
+  public OpenOfficeSpellDictionary(InputStream dictStream, InputStream affStream) throws IOException {
+      initFromFiles(dictStream, affStream);
+    }
 
   private void initFromZipFile(ZipFile zipFile, File personalFileRootDir) throws IOException {
     long t = System.currentTimeMillis();
@@ -49,6 +54,10 @@ public class OpenOfficeSpellDictionary implements SpellDictionary {
     File personalDictionaryFile = computePersonalWordFile(dictFile.getPath(), personalFileRootDir);
     initPersonalWordsSupport(personalDictionaryFile);
   }
+
+  private void initFromFiles(InputStream dictStream, InputStream affStream) throws IOException {
+      dictionaryEngine = new OpenOfficeDictionarySupport(dictStream, affStream);
+    }
 
   /**
    * Accessor to manage PersonalDictionary

@@ -34,7 +34,7 @@ public class Spell6rChecker extends SpellChecker {
   public static void main(String[] args) {
 
     if (args.length < 1) {
-      System.out.println("Usage: PrimaSpellChecker <file>");
+      System.out.println("Usage: Spell6rChecker <file>");
       System.exit(1);
     }
 
