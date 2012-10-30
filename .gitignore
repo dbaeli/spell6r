@@ -9,3 +9,5 @@ bin/
 *.jar
 *.war
 *.ear
+.idea/
+atlassian-ide-plugin.xml

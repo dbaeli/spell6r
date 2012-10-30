@@ -27,6 +27,10 @@ public class OpenOfficeSpellDictionary implements SpellDictionary {
     initFromZipFile(zipFile, null);
   }
 
+  public OpenOfficeSpellDictionary(InputStream inputStream) throws IOException {
+    initFromStream(inputStream);
+  }
+
   public OpenOfficeSpellDictionary(ZipFile zipFile, File personalFileRootDir) throws IOException {
     initFromZipFile(zipFile, personalFileRootDir);
   }
@@ -39,14 +43,19 @@ public class OpenOfficeSpellDictionary implements SpellDictionary {
       initFromFiles(dictStream, affStream);
     }
 
+  /**
+   * @param stream Stream on the zip file
+   * @throws IOException
+   */
+  private void initFromStream(InputStream stream) throws IOException {
+    dictionaryEngine = new OpenOfficeDictionarySupport(stream);
+  }
+
   private void initFromZipFile(ZipFile zipFile, File personalFileRootDir) throws IOException {
     long t = System.currentTimeMillis();
     dictionaryEngine = new OpenOfficeDictionarySupport(zipFile);
     File personalDictionaryFile = computePersonalWordFile(zipFile.getName(), personalFileRootDir);
     initPersonalWordsSupport(personalDictionaryFile);
-    // System.out.println("Dictionary [" + zipFile.getName() + "] loaded in " +
-    // (System.currentTimeMillis() - t) + " ms");
-    // System.out.println("Personal dict is [" + personalDictionaryFile.getPath() + "]");
   }
 
   private void initFromFiles(File dictFile, File affFile, File personalFileRootDir) throws IOException {
@@ -144,7 +153,7 @@ public class OpenOfficeSpellDictionary implements SpellDictionary {
     }
   }
 
-  private void initPersonalWordsSupport(File personalFile) throws IOException {
+  public void initPersonalWordsSupport(File personalFile) throws IOException {
 
     personalDictionary = new PersonalDictionary(personalFile, dictionaryEngine.get_dic_encoding()) {
       /**

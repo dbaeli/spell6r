@@ -1,16 +1,29 @@
 package org.spell6r;
 
-import java.io.File;
+import org.dts.spell.dictionary.openoffice.OpenOfficeSpellDictionary;
+
+import java.io.*;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.zip.ZipFile;
 
-import org.dts.spell.dictionary.openoffice.OpenOfficeSpellDictionary;
-
 public class DictionaryUtils {
+
+  /**
+   * @param language
+   * @param stream   stream on the zip file
+   * @return
+   */
+  public static OpenOfficeSpellDictionary readDictionnary(String language, InputStream stream) {
+    try {
+      return new OpenOfficeSpellDictionary(stream);
+    } catch (Exception e) {
+      java.util.logging.Logger.getAnonymousLogger().severe("Dictionnary : " + language + " error during loading : " + e.getMessage());
+    }
+    return null;
+  }
 
   public static OpenOfficeSpellDictionary readDictionnary(String language, String path) {
     try {
@@ -24,23 +37,31 @@ public class DictionaryUtils {
 
   public static OpenOfficeSpellDictionary fetchDictionary(String language) {
     String filename = "dictionaries/" + language + ".zip";
-    URL resource = Spell6rChecker.class.getResource(filename);
+    URL resource = DictionaryUtils.class.getResource(filename);
     if (resource == null) {
-      resource = Spell6rChecker.class.getClassLoader().getResource(filename);
+      resource = DictionaryUtils.class.getClassLoader().getResource(filename);
     }
-    String path = null;
-    if (resource != null) {
-      path = resource.getPath();
-    } else {
-      File localFile = new File(filename);
-      if (localFile.exists()) {
-        path = localFile.getAbsolutePath();
+    java.io.InputStream stream = null;
+    try {
+      if (resource != null) {
+        stream = resource.openStream();
       } else {
-        // No file found
+        File localFile = new File(filename);
+        if (localFile.exists()) {
+          try {
+            stream = new FileInputStream(localFile.getAbsolutePath());
+          } catch (FileNotFoundException e) {
+          }
+        } else {
+          // No file found
+        }
       }
-    }
-    if (path != null) {
-      return readDictionnary(language, path);
+      //Read the dictionnary from the zip file stream (will be managed as ZipInputStream internally)
+      if (stream != null) {
+        return readDictionnary(language, stream);
+      }
+    } catch (IOException e) {
+      System.err.print("Failed to load dictionnary : " + e.getMessage());
     }
     return null;
   }
@@ -71,7 +92,8 @@ public class DictionaryUtils {
 
   public static Map<String, OpenOfficeSpellDictionary> fetchDictionaries() {
     Map<String, OpenOfficeSpellDictionary> dicts = new HashMap<String, OpenOfficeSpellDictionary>();
-    URL resource = Spell6rChecker.class.getResource("/dictionaries/");
+
+    URL resource = Spell6rChecker.class.getResource("dictionaries/");
     if (resource != null) {
       scanResourceForDictionnary(dicts, resource.getPath());
     }
@@ -79,8 +101,10 @@ public class DictionaryUtils {
     if (resource != null) {
       scanResourceForDictionnary(dicts, resource.getPath());
     }
+
     scanResourceForDictionnary(dicts, "dictionaries/");
     return dicts;
   }
+
 
 }

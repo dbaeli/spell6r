@@ -6,57 +6,24 @@
  */
 package org.spell6r;
 
+import com.swabunga.spell.engine.SpellDictionaryHashMap;
+import com.swabunga.spell.event.*;
+import org.apache.commons.io.IOUtils;
+import org.dts.spell.dictionary.openoffice.OpenOfficeSpellDictionary;
+
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.dts.spell.dictionary.openoffice.OpenOfficeSpellDictionary;
-
-import com.swabunga.spell.event.FileWordTokenizer;
-import com.swabunga.spell.event.SpellCheckEvent;
-import com.swabunga.spell.event.SpellCheckListener;
-import com.swabunga.spell.event.SpellChecker;
-import com.swabunga.spell.event.XMLWordFinder;
-
 /**
  * OpenOffice dictionnary based spellchecker
- * 
+ *
  * @author dba
  */
 public class Spell6rChecker extends SpellChecker {
-
-  /**
-   * Build a personalDictionary
-   * 
-   * @param args
-   */
-  public static void main(String[] args) {
-
-    if (args.length < 1) {
-      System.out.println("Usage: Spell6rChecker <file>");
-      System.exit(1);
-    }
-
-    final Spell6rChecker checker = new Spell6rChecker();
-    checker.discoverDictionaries();
-
-    for (String fileToParse : args) {
-      System.out.println("Spell6r: Parsing " + fileToParse);
-      checker.setCurrentSource(fileToParse);
-      FileWordTokenizer fwt = new FileWordTokenizer(new File(fileToParse), new XMLWordFinder());
-      checker.checkSpelling(fwt, false);
-    }
-    System.out.println(checker.dumpSpellReport());
-
-  }
-
-  public void discoverDictionaries() {
-    Map<String, OpenOfficeSpellDictionary> fetchDictionaries = DictionaryUtils.fetchDictionaries();
-    for (OpenOfficeSpellDictionary dictionary : fetchDictionaries.values()) {
-      loadDictionary(dictionary);
-    }
-  }
 
   private String currentSource;
   private List<SpellingError> spellingErrors = new ArrayList<SpellingError>();
@@ -77,6 +44,15 @@ public class Spell6rChecker extends SpellChecker {
         spellingErrors.add(new SpellingError(currentSource, invalidWord, event.getSuggestions()));
       }
     });
+
+    //Setup extended dictionary
+    final SpellDictionaryHashMap personalDictionary;
+    try {
+      personalDictionary = new SpellDictionaryHashMap();
+      setUserDictionary(personalDictionary);
+    } catch (IOException e) {
+      //No file, no error.
+    }
   }
 
   public void reset() {
@@ -121,5 +97,61 @@ public class Spell6rChecker extends SpellChecker {
     buffer.append(spellingErrors.size());
     buffer.append("\n");
   }
+
+  /**
+   * Scans the classpath for dictionaries
+   */
+  public void discoverDictionaries() {
+    Map<String, OpenOfficeSpellDictionary> fetchDictionaries = DictionaryUtils.fetchDictionaries();
+    for (OpenOfficeSpellDictionary dictionary : fetchDictionaries.values()) {
+      loadDictionary(dictionary);
+    }
+  }
+
+  public void discoverExtendedDic() {
+    final InputStream resourceAsStream = Spell6rChecker.class.getResourceAsStream("/extended.dic");
+    if (resourceAsStream != null) {
+      try {
+        final List<String> words = IOUtils.readLines(resourceAsStream);
+        int wordCount = 0;
+        for (String word : words) {
+          if (word.trim().length() > 0) {
+            addToDictionary(word);
+            wordCount++;
+          }
+        }
+        if (wordCount > 0) {
+          System.out.println("SPELLCHECK : Found an extended dic with " + words.size() + " word(s)");
+        }
+      } catch (IOException e) {
+        System.err.println("SPELLCHECK ERROR reading the personal dictionary");
+      }
+    } else {
+      System.out.println("SPELLCHECK : No extended dictionary found for spellchecking ( /extended.dic in the classpath).");
+    }
+  }
+
+  //---------------------------------------
+
+  public static void main(String[] args) {
+
+    if (args.length < 1) {
+      System.out.println("Usage: PrimaSpellChecker <file>");
+      System.exit(1);
+    }
+
+    final Spell6rChecker checker = new Spell6rChecker();
+    checker.discoverDictionaries();
+
+    for (String fileToParse : args) {
+      System.out.println("Spell6r: Parsing " + fileToParse);
+      checker.setCurrentSource(fileToParse);
+      FileWordTokenizer fwt = new FileWordTokenizer(new File(fileToParse), new XMLWordFinder());
+      checker.checkSpelling(fwt, false);
+    }
+    System.out.println(checker.dumpSpellReport());
+
+  }
+
 
 }
