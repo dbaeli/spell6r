@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.spell6r</groupId>
   <artifactId>spell6r-engine</artifactId>
-  <version>5.3.0-SNAPSHOT</version>
+  <version>5.3.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>spell6r (aka jazzy with fixes and ooo support)</name>
 
@@ -13,6 +13,17 @@
     <developerConnection>scm:git:ssh://github.com/dbaeli/spell6r.git</developerConnection>
     <url>https://github.com/dbaeli/spell6r</url>
   </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>bintray-dbaeli-lesfurets-oss-spell6r</id>
+      <url>https://api.bintray.com/maven/dbaeli/lesfurets-oss/spell6r</url>
+    </repository>
+    <snapshotRepository>
+      <id>bintray-dbaeli-lesfurets-oss-spell6r</id>
+      <url>https://api.bintray.com/maven/dbaeli/lesfurets-oss/spell6r</url>
+    </snapshotRepository>
+ </distributionManagement>
 
   <properties>
     <!-- Java 5 -->
@@ -41,6 +52,7 @@
     </dependency>
   </dependencies>
 
+<!--
   <build>
     <plugins>
       <plugin>
@@ -66,6 +78,7 @@
       </plugin>
     </plugins>
   </build>
+-->
 
 
 </project>
